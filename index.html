@@ -1,0 +1,394 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1.0">
+
+  <title>행운의 로또 번호 추첨기</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Malgun Gothic", "맑은 고딕",
+                   Arial, sans-serif;
+      background: linear-gradient(
+        135deg, #10254a, #253c75, #473878
+      );
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 850px;
+      padding: 45px 25px;
+      text-align: center;
+      background: rgba(255, 255, 255, 0.10);
+      border: 2px solid rgba(255,255,255,0.2);
+      border-radius: 30px;
+      box-shadow: 0 15px 40px rgba(0,0,0,0.25);
+    }
+
+    h1 {
+      font-size: clamp(32px, 6vw, 52px);
+      margin: 0 0 15px;
+      color: #ffe681;
+    }
+
+    .subtitle {
+      font-size: clamp(19px, 3vw, 26px);
+      margin-bottom: 35px;
+      line-height: 1.6;
+    }
+
+    .balls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 15px;
+      margin: 35px auto;
+      min-height: 110px;
+    }
+
+    .ball {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 42px;
+      font-weight: 900;
+      color: #172033;
+      border: 3px solid rgba(255,255,255,0.75);
+      box-shadow:
+        inset -8px -10px 15px rgba(0,0,0,0.20),
+        inset 6px 8px 12px rgba(255,255,255,0.35),
+        0 8px 12px rgba(0,0,0,0.25);
+      transition: transform 0.2s;
+    }
+
+    .ball:nth-child(1) { background: #ffdc43; }
+    .ball:nth-child(2) { background: #65c7ff; }
+    .ball:nth-child(3) { background: #ff7777; }
+    .ball:nth-child(4) { background: #c59cff; }
+    .ball:nth-child(5) { background: #8be39a; }
+    .ball:nth-child(6) { background: #ffad62; }
+
+    .ball.rolling {
+      animation: shake 0.15s infinite alternate;
+    }
+
+    .ball.finished {
+      animation: pop 0.4s ease;
+    }
+
+    @keyframes shake {
+      from { transform: translateY(-5px) rotate(-5deg); }
+      to   { transform: translateY(5px) rotate(5deg); }
+    }
+
+    @keyframes pop {
+      0%   { transform: scale(0.7); }
+      60%  { transform: scale(1.18); }
+      100% { transform: scale(1); }
+    }
+
+    .buttons {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 20px;
+      margin-top: 30px;
+    }
+
+    button {
+      min-height: 76px;
+      min-width: 230px;
+      padding: 18px 32px;
+      font-size: 29px;
+      font-weight: 900;
+      font-family: inherit;
+      border: none;
+      border-radius: 18px;
+      cursor: pointer;
+      transition: transform 0.15s,
+                  background 0.15s;
+      touch-action: manipulation;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+
+    button:focus-visible {
+      outline: 4px solid white;
+      outline-offset: 5px;
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    #drawBtn {
+      background: #ffdd46;
+      color: #172033;
+      box-shadow: 0 7px 0 #c29d16;
+    }
+
+    #drawBtn:hover:not(:disabled) {
+      background: #ffec82;
+    }
+
+    #resetBtn {
+      background: #ffffff;
+      color: #243b70;
+      box-shadow: 0 7px 0 #afb8ce;
+    }
+
+    #resetBtn:hover:not(:disabled) {
+      background: #e2ebff;
+    }
+
+    .status {
+      font-size: 26px;
+      font-weight: bold;
+      min-height: 40px;
+      margin-top: 30px;
+      color: #ffe681;
+    }
+
+    .notice {
+      font-size: 18px;
+      line-height: 1.6;
+      color: #e2e6f3;
+      margin-top: 30px;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        padding: 35px 12px;
+      }
+
+      .balls {
+        gap: 9px;
+      }
+
+      .ball {
+        width: 78px;
+        height: 78px;
+        font-size: 32px;
+      }
+
+      button {
+        width: 100%;
+        font-size: 27px;
+        min-width: 0;
+      }
+
+      .buttons {
+        gap: 18px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      .ball.rolling,
+      .ball.finished {
+        animation: none;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="container">
+
+    <h1>🍀 행운의 로또 추첨기</h1>
+
+    <p class="subtitle">
+      행운의 숫자 6개를 뽑아보세요!
+    </p>
+
+    <div class="balls" id="balls">
+      <div class="ball">?</div>
+      <div class="ball">?</div>
+      <div class="ball">?</div>
+      <div class="ball">?</div>
+      <div class="ball">?</div>
+      <div class="ball">?</div>
+    </div>
+
+    <div class="buttons">
+      <button id="drawBtn" type="button">
+        🎰 번호 뽑기
+      </button>
+
+      <button id="resetBtn" type="button">
+        🔄 다시 뽑기
+      </button>
+    </div>
+
+    <p class="status"
+       id="status"
+       role="status"
+       aria-live="polite">
+      버튼을 눌러 시작하세요!
+    </p>
+
+    <p class="notice">
+      ※ 1부터 45까지 중복 없이 6개를 추첨합니다.<br>
+      ※ 모든 번호 조합의 당첨 확률은 동일합니다.
+    </p>
+
+  </main>
+
+  <script>
+    "use strict";
+
+    const balls = Array.from(
+      document.querySelectorAll(".ball")
+    );
+
+    const drawBtn = document.getElementById("drawBtn");
+    const resetBtn = document.getElementById("resetBtn");
+    const statusText = document.getElementById("status");
+
+    let isDrawing = false;
+    let rollingTimer = null;
+    let finishTimer = null;
+
+    // 1~45 사이 정수 하나 생성
+    function randomNumber(max) {
+      // 지원 브라우저에서는 보안 난수 사용
+      if (window.crypto &&
+          window.crypto.getRandomValues) {
+
+        const data = new Uint32Array(1);
+        const range = 4294967296;
+        const limit = range - (range % max);
+
+        let value;
+
+        do {
+          window.crypto.getRandomValues(data);
+          value = data[0];
+        } while (value >= limit);
+
+        return (value % max) + 1;
+      }
+
+      // 오래된 브라우저용 대체 방법
+      return Math.floor(Math.random() * max) + 1;
+    }
+
+    // 중복 없는 숫자 6개 뽑기
+    function generateLottoNumbers() {
+      const numbers = Array.from(
+        { length: 45 },
+        (_, i) => i + 1
+      );
+
+      // Fisher-Yates 셔플 일부 실행
+      for (let i = 0; i < 6; i++) {
+        const j = i + randomNumber(45 - i) - 1;
+
+        [numbers[i], numbers[j]] =
+          [numbers[j], numbers[i]];
+      }
+
+      return numbers
+        .slice(0, 6)
+        .sort((a, b) => a - b);
+    }
+
+    // 버튼 활성화/비활성화
+    function setButtonsDisabled(disabled) {
+      drawBtn.disabled = disabled;
+      resetBtn.disabled = disabled;
+    }
+
+    // 번호 추첨 시작
+    function drawNumbers() {
+      if (isDrawing) return;
+
+      isDrawing = true;
+      setButtonsDisabled(true);
+
+      clearInterval(rollingTimer);
+      clearTimeout(finishTimer);
+
+      statusText.textContent = "🎲 번호를 뽑고 있습니다...";
+
+      // 실제 당첨 후보 번호는 먼저 확정
+      const finalNumbers = generateLottoNumbers();
+
+      // 빠르게 숫자가 바뀌는 효과
+      balls.forEach(ball => {
+        ball.classList.remove("finished");
+        ball.classList.add("rolling");
+      });
+
+      rollingTimer = setInterval(() => {
+        // 애니메이션 중에도 중복 없는 숫자 표시
+        const previewNumbers = generateLottoNumbers();
+
+        balls.forEach((ball, index) => {
+          ball.textContent = previewNumbers[index];
+        });
+      }, 65);
+
+      // 약 1.7초 후 최종 번호 공개
+      finishTimer = setTimeout(() => {
+        clearInterval(rollingTimer);
+        rollingTimer = null;
+
+        balls.forEach((ball, index) => {
+          ball.classList.remove("rolling");
+          ball.textContent = finalNumbers[index];
+
+          // 애니메이션 재실행
+          void ball.offsetWidth;
+          ball.classList.add("finished");
+        });
+
+        statusText.textContent =
+          "🎉 추첨 완료! 행운을 빕니다!";
+
+        isDrawing = false;
+        setButtonsDisabled(false);
+
+      }, 1700);
+    }
+
+    // 새 번호 다시 뽑기
+    function resetAndDraw() {
+      if (isDrawing) return;
+
+      balls.forEach(ball => {
+        ball.textContent = "?";
+        ball.classList.remove("rolling", "finished");
+      });
+
+      drawNumbers();
+    }
+
+    // 이벤트 연결
+    drawBtn.addEventListener("click", drawNumbers);
+    resetBtn.addEventListener("click", resetAndDraw);
+
+  </script>
+
+</body>
+</html>
